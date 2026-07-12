@@ -4,6 +4,9 @@ import cookieParser from "cookie-parser";
 import prisma from "./config/prisma.js";
 import errorHandler from "./middlewares/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
+import fuelLogRoutes from "./routes/fuelLog.routes.js";
+import expenseRoutes from "./routes/expense.routes.js";
+import vehicleRoutes from "./routes/vehicle.routes.js";
 
 const app = express();
 
@@ -35,6 +38,9 @@ app.get("/api/health/db", async (_req, res, next) => {
 
 // ── API Routes ──
 app.use("/api/auth", authRoutes);
+app.use("/api/fuel-logs", fuelLogRoutes);
+app.use("/api/expenses", expenseRoutes);
+app.use("/api/vehicles", vehicleRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
