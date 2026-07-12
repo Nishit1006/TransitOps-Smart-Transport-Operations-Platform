@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Fuel, Gauge, Wallet, TrendingUp } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { AnalyticsSummary } from "@/lib/types";
 import { KpiCard } from "@/components/kpi-card";
@@ -44,21 +45,25 @@ export default function AnalyticsPage() {
         <KpiCard
           label="Fuel Efficiency"
           value={s ? `${s.fuelEfficiency} km/L` : "—"}
+          icon={Fuel}
           isLoading={summaryQuery.isLoading}
         />
         <KpiCard
           label="Fleet Utilization"
           value={s ? `${s.fleetUtilization}%` : "—"}
+          icon={Gauge}
           isLoading={summaryQuery.isLoading}
         />
         <KpiCard
           label="Operational Cost"
           value={s ? `₹${s.totalOperationalCost.toLocaleString()}` : "—"}
+          icon={Wallet}
           isLoading={summaryQuery.isLoading}
         />
         <KpiCard
           label="Vehicle ROI"
           value={s ? `${(s.avgVehicleROI * 100).toFixed(1)}%` : "—"}
+          icon={TrendingUp}
           isLoading={summaryQuery.isLoading}
         />
       </div>

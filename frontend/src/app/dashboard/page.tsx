@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Truck, CheckCircle2, Wrench, Route, Clock, Users, Gauge } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import {
@@ -136,15 +137,16 @@ export default function DashboardPage() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-        <KpiCard label="Active Vehicles" value={k?.activeVehicles ?? 0} isLoading={kpisQuery.isLoading} />
-        <KpiCard label="Available" value={k?.availableVehicles ?? 0} isLoading={kpisQuery.isLoading} />
-        <KpiCard label="In Maintenance" value={k?.vehiclesInMaintenance ?? 0} isLoading={kpisQuery.isLoading} />
-        <KpiCard label="Active Trips" value={k?.activeTrips ?? 0} isLoading={kpisQuery.isLoading} />
-        <KpiCard label="Pending Trips" value={k?.pendingTrips ?? 0} isLoading={kpisQuery.isLoading} />
-        <KpiCard label="Drivers On Duty" value={k?.driversOnDuty ?? 0} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="Active Vehicles" value={k?.activeVehicles ?? 0} icon={Truck} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="Available" value={k?.availableVehicles ?? 0} icon={CheckCircle2} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="In Maintenance" value={k?.vehiclesInMaintenance ?? 0} icon={Wrench} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="Active Trips" value={k?.activeTrips ?? 0} icon={Route} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="Pending Trips" value={k?.pendingTrips ?? 0} icon={Clock} isLoading={kpisQuery.isLoading} />
+        <KpiCard label="Drivers On Duty" value={k?.driversOnDuty ?? 0} icon={Users} isLoading={kpisQuery.isLoading} />
         <KpiCard
           label="Fleet Utilization"
           value={k ? `${k.fleetUtilization}%` : "0%"}
+          icon={Gauge}
           isLoading={kpisQuery.isLoading}
         />
       </div>

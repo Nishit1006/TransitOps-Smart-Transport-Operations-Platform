@@ -4,7 +4,15 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { MenuIcon } from "lucide-react";
+import {
+  MenuIcon,
+  LayoutDashboard,
+  BarChart3,
+  Fuel,
+  Settings as SettingsIcon,
+  UserPlus,
+  LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiClientError } from "@/lib/api";
 import { can, NAV_ITEMS } from "@/lib/permissions";
@@ -20,24 +28,36 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+const NAV_ICONS: Record<string, LucideIcon> = {
+  "/dashboard": LayoutDashboard,
+  "/analytics": BarChart3,
+  "/fuel-expenses": Fuel,
+  "/settings": SettingsIcon,
+  "/admin/users": UserPlus,
+};
+
 function NavLinks({ items, pathname, onNavigate }: { items: typeof NAV_ITEMS; pathname: string; onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-1">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={onNavigate}
-          className={cn(
-            "rounded-md px-3 py-2 text-sm transition-colors",
-            pathname === item.href
-              ? "bg-muted font-medium text-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
+      {items.map((item) => {
+        const Icon = NAV_ICONS[item.href];
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+              pathname === item.href
+                ? "bg-muted font-medium text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            {Icon && <Icon className="size-4 shrink-0" />}
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
