@@ -31,3 +31,27 @@ export function can(role: string | undefined, permission: Permission): boolean {
   if (!role) return false;
   return (PERMISSIONS[permission] as readonly string[]).includes(role);
 }
+
+/**
+ * Route -> permission map. This is the single source of truth for which
+ * permission a URL requires — both the nav (AppShell, for labels + filtering)
+ * and proxy.ts (for the route-level redirect check) read from this same
+ * array. Add a new role-restricted page here and both nav visibility and
+ * proxy enforcement pick it up automatically; no proxy.ts branch needed.
+ */
+export const NAV_ITEMS: { href: string; label: string; permission: Permission }[] = [
+  { href: "/dashboard", label: "Dashboard", permission: "dashboard" },
+  { href: "/analytics", label: "Analytics", permission: "analytics" },
+  { href: "/fuel-expenses", label: "Fuel & Expenses", permission: "fuelExpenses" },
+  { href: "/settings", label: "Settings", permission: "settings" },
+  { href: "/admin/users", label: "Create User", permission: "manageUsers" },
+];
+
+export function permissionForPath(pathname: string): Permission | undefined {
+  // Longest-prefix match first, so a more specific route (e.g. /admin/users)
+  // wins over a shorter one that happens to also prefix-match.
+  const match = [...NAV_ITEMS]
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+  return match?.permission;
+}

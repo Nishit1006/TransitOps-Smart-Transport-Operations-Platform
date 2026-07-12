@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MenuIcon } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiClientError } from "@/lib/api";
-import { can, Permission } from "@/lib/permissions";
+import { can, NAV_ITEMS } from "@/lib/permissions";
 import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-const NAV_ITEMS: { href: string; label: string; permission: Permission }[] = [
-  { href: "/dashboard", label: "Dashboard", permission: "dashboard" },
-  { href: "/analytics", label: "Analytics", permission: "analytics" },
-  { href: "/fuel-expenses", label: "Fuel & Expenses", permission: "fuelExpenses" },
-  { href: "/settings", label: "Settings", permission: "settings" },
-  { href: "/admin/users", label: "Create User", permission: "manageUsers" },
-];
 
 function NavLinks({ items, pathname, onNavigate }: { items: typeof NAV_ITEMS; pathname: string; onNavigate?: () => void }) {
   return (

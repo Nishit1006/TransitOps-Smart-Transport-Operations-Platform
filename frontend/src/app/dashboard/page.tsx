@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import {
   DashboardKpis,
@@ -40,9 +42,20 @@ const STATUS_BADGE_VARIANT: Record<RecentTrip["status"], "default" | "secondary"
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [regionFilter, setRegionFilter] = useState<string>("ALL");
+
+  useEffect(() => {
+    const denied = searchParams.get("denied");
+    if (denied) {
+      toast.error(`You don't have access to ${denied}`);
+      router.replace("/dashboard");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const kpisQuery = useQuery({
     queryKey: ["dashboard", "kpis"],
