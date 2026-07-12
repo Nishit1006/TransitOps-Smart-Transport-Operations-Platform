@@ -23,6 +23,16 @@ export const PERMISSIONS = {
   manageFuelExpenses: ["FINANCIAL_ANALYST", "ADMIN"],
   settings: ["FLEET_MANAGER", "ADMIN"],
   manageUsers: ["ADMIN"],
+  vehicles: ROLES,
+  manageVehicles: ["FLEET_MANAGER", "ADMIN"],
+  drivers: ROLES,
+  // SAFETY_OFFICER manages compliance fields (license, safety score) per spec;
+  // simplified to full record edit access rather than field-level permissions.
+  manageDrivers: ["FLEET_MANAGER", "ADMIN", "SAFETY_OFFICER"],
+  trips: ROLES,
+  manageTrips: ["DISPATCHER", "ADMIN"],
+  maintenance: ROLES,
+  manageMaintenance: ["FLEET_MANAGER", "ADMIN"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;
@@ -41,8 +51,12 @@ export function can(role: string | undefined, permission: Permission): boolean {
  */
 export const NAV_ITEMS: { href: string; label: string; permission: Permission }[] = [
   { href: "/dashboard", label: "Dashboard", permission: "dashboard" },
-  { href: "/analytics", label: "Analytics", permission: "analytics" },
+  { href: "/trips", label: "Trips", permission: "trips" },
+  { href: "/vehicles", label: "Vehicles", permission: "vehicles" },
+  { href: "/drivers", label: "Drivers", permission: "drivers" },
+  { href: "/maintenance", label: "Maintenance", permission: "maintenance" },
   { href: "/fuel-expenses", label: "Fuel & Expenses", permission: "fuelExpenses" },
+  { href: "/analytics", label: "Analytics", permission: "analytics" },
   { href: "/settings", label: "Settings", permission: "settings" },
   { href: "/admin/users", label: "Create User", permission: "manageUsers" },
 ];

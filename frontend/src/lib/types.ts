@@ -67,6 +67,27 @@ export type Expense = {
   date: string;
 };
 
+export type Vehicle = {
+  id: string;
+  registrationNumber: string;
+  name: string;
+  type: VehicleType;
+  maxLoadCapacityKg: string;
+  odometerKm: string;
+  acquisitionCost: string;
+  status: VehicleStatus;
+  region: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type VehicleListItem = {
+  id: string;
+  name: string;
+  registrationNumber: string;
+  status: VehicleStatus;
+};
+
 export type OrgSettings = {
   id: string;
   depotName: string;

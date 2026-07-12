@@ -16,4 +16,14 @@ export const PERMISSIONS = {
   manageFuelExpenses: ["FINANCIAL_ANALYST", "ADMIN"],
   settings: ["FLEET_MANAGER", "ADMIN"],
   manageUsers: ["ADMIN"],
+  vehicles: ROLES,
+  manageVehicles: ["FLEET_MANAGER", "ADMIN"],
+  drivers: ROLES,
+  // SAFETY_OFFICER manages compliance fields (license, safety score) per spec;
+  // simplified to full record edit access rather than field-level permissions.
+  manageDrivers: ["FLEET_MANAGER", "ADMIN", "SAFETY_OFFICER"],
+  trips: ROLES,
+  manageTrips: ["DISPATCHER", "ADMIN"],
+  maintenance: ROLES,
+  manageMaintenance: ["FLEET_MANAGER", "ADMIN"],
 };

@@ -59,5 +59,9 @@ export const config = {
     "/fuel-expenses/:path*",
     "/settings/:path*",
     "/admin/:path*",
+    "/trips/:path*",
+    "/vehicles/:path*",
+    "/drivers/:path*",
+    "/maintenance/:path*",
   ],
 };

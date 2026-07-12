@@ -11,6 +11,10 @@ import {
   Fuel,
   Settings as SettingsIcon,
   UserPlus,
+  Route,
+  Truck,
+  Users,
+  Wrench,
   LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +34,10 @@ import {
 
 const NAV_ICONS: Record<string, LucideIcon> = {
   "/dashboard": LayoutDashboard,
+  "/trips": Route,
+  "/vehicles": Truck,
+  "/drivers": Users,
+  "/maintenance": Wrench,
   "/analytics": BarChart3,
   "/fuel-expenses": Fuel,
   "/settings": SettingsIcon,
