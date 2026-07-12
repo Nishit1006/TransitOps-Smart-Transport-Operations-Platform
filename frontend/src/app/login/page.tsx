@@ -2,10 +2,10 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch, ApiClientError } from "@/lib/api";
-import { SessionUser } from "@/lib/auth";
+import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,12 +19,7 @@ export default function LoginPage() {
   const [isResending, setIsResending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
-  const sessionQuery = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => apiFetch<SessionUser>("/api/auth/me"),
-    retry: false,
-    meta: { skipAuthRedirect: true },
-  });
+  const sessionQuery = useSession();
 
   useEffect(() => {
     if (sessionQuery.data) {

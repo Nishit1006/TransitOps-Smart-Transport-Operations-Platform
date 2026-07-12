@@ -67,6 +67,14 @@ export type Expense = {
   date: string;
 };
 
+export type OrgSettings = {
+  id: string;
+  depotName: string;
+  currency: string;
+  distanceUnit: "KM" | "MILES";
+  updatedAt: string;
+};
+
 export type AnalyticsSummary = {
   fuelEfficiency: number;
   fleetUtilization: number;

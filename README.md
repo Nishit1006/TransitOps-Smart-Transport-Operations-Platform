@@ -183,8 +183,19 @@ curl http://localhost:5001/api/health/db
 
 - `POST /api/auth/register` is **public** but always creates the account as `DISPATCHER` (lowest privilege). The `role` field is not part of the request schema — if a client sends one anyway, it's silently ignored by Zod's default "strip unknown keys" behavior, not honored.
 - Elevated roles (`FLEET_MANAGER`, `SAFETY_OFFICER`, `FINANCIAL_ANALYST`, `ADMIN`) can only be granted via `POST /api/admin/users`, which requires an authenticated `ADMIN` session (`authenticate` + `authorize("ADMIN")`). Admin-created accounts are marked `isEmailVerified: true` immediately (the admin creating them is the verification step); self-serve registrations still go through the OTP email flow.
-- **Why this shape and not a full "admin create user" screen:** the fix prioritized closing the privilege-escalation hole and standing up the API contract correctly. There's no admin UI for user creation yet — use `POST /api/admin/users` directly (curl/Postman) until that screen is built.
+- Admin UI for this lives at `/admin/users` — a minimal form (name, email, password, role) visible only to `ADMIN` accounts, both by nav visibility and a client-side role check on the page itself.
 - ⚠️ **Contract change:** `POST /api/auth/register` no longer accepts/uses `role` in the request body. Anything that was relying on setting a role at registration needs to switch to `POST /api/admin/users`.
+
+### Roles & permissions
+
+- Role → permission mapping lives in **two mirrored files**, since the Express backend and Next.js frontend are separate deployables with no shared package:
+  - `backend/src/config/permissions.js` — imported by route files (`authorize(...PERMISSIONS.someKey)`) instead of hardcoding role arrays inline.
+  - `frontend/src/lib/permissions.ts` — imported by the nav (`AppShell`) and by role-restricted pages (`/settings`, `/admin/users`) via `can(role, permission)`.
+  - **Risk:** these two files must be hand-kept in sync. If they drift, the nav could show a link the API will 403 on, or hide one it would actually allow. There is no automated check for this today.
+- `/settings` (view + update `OrgSettings`) is restricted to `FLEET_MANAGER` and `ADMIN`.
+- `/admin/users` (create a user with any role) is restricted to `ADMIN`.
+- `/dashboard`, `/analytics`, `/fuel-expenses` are open to all 5 roles; creating fuel logs/expenses within that page is further restricted to `FINANCIAL_ANALYST`/`ADMIN` at the API layer (unchanged from before this work).
+- **Enforcement layering:** `proxy.ts` redirects unauthenticated requests to `/login` for all of the above routes (checks cookie *presence* only). Role-specific access (e.g. a `DISPATCHER` hitting `/settings`) is checked client-side after `/api/auth/me` resolves, rendering an "Access denied" screen instead of the page — but the real enforcement is server-side `authorize()`, so even if the client check were bypassed, the underlying API calls still 403. Proxy doesn't decode the JWT's role claim because that would require duplicating `JWT_SECRET` into the frontend; flagging this as a known simplification rather than a gap in actual security.
 
 ### Demo accounts
 

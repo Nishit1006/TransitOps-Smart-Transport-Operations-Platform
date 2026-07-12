@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
-import { SessionUser } from "@/lib/auth";
+import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,13 +15,7 @@ import {
 
 export default function Home() {
   const router = useRouter();
-
-  const sessionQuery = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => apiFetch<SessionUser>("/api/auth/me"),
-    retry: false,
-    meta: { skipAuthRedirect: true },
-  });
+  const sessionQuery = useSession();
 
   useEffect(() => {
     if (sessionQuery.data) {
