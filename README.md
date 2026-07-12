@@ -194,7 +194,7 @@ curl http://localhost:5001/api/health/db
   - **Risk:** the backend and frontend files above are two *separate* files that must be hand-kept in sync (no shared package across the app boundary). If they drift, the nav/proxy could allow a route the API would 403 on, or block one it would actually allow. There is no automated check for this today. Within the frontend itself, though, `permissions.ts` is genuinely a single source of truth — nav and `proxy.ts` both import the same `NAV_ITEMS`/`PERMISSIONS`, no duplication there.
 - `/settings` (view + update `OrgSettings`) is restricted to `FLEET_MANAGER` and `ADMIN`.
 - `/admin/users` (create a user with any role) is restricted to `ADMIN`.
-- `/dashboard`, `/analytics`, `/fuel-expenses` are open to all 5 roles; creating fuel logs/expenses within that page is further restricted to `FINANCIAL_ANALYST`/`ADMIN` at the API layer (unchanged from before this work).
+- `/dashboard`, `/analytics`, `/fuel-expenses`, `/vehicles`, `/drivers`, `/trips`, `/maintenance` are open to all 5 roles to *view*; each has a narrower `manageX` permission gating the actual create/edit/action buttons (see the Fleet Operations section below).
 - **Enforcement layering:** `proxy.ts` verifies the JWT's signature (`jsonwebtoken`, same secret and algorithm the backend signs with — `JWT_SECRET` must be set identically in `frontend/.env.local`, never as `NEXT_PUBLIC_*`) and checks the token's `role` claim against `permissionForPath()` *before* any page renders. No token → redirect to `/login`. Invalid/expired token → redirect to `/login`. Valid token but wrong role → redirect to `/dashboard?denied=<path>`, which shows a toast and strips the query param. This is deliberately an *optimistic* check against the JWT claim alone — no DB lookup in proxy (Next.js explicitly recommends against slow work there). The real, authoritative enforcement is still the backend's `authorize()` middleware, which also checks `isActive`/`lockedUntil` against the database — so even a forged or replayed-but-otherwise-valid-looking token still gets rejected server-side if the account is deactivated or locked.
 
 ### Demo accounts
@@ -208,6 +208,54 @@ Seeded via `npm run seed` (backend), idempotent — safe to re-run. All accounts
 | DISPATCHER | `dispatcher@transitops.com` | `Password123!` |
 | SAFETY_OFFICER | `safety.officer@transitops.com` | `Password123!` |
 | FINANCIAL_ANALYST | `financial.analyst@transitops.com` | `Password123!` |
+
+The seed script also creates 4 sample vehicles, 4 sample drivers, one **COMPLETED** trip lifecycle (Van-05 + Alex Rivera, 450kg cargo, 120km, ₹1800 fuel, ₹6000 revenue — the numbers from the spec's Section 5 example, verified end to end), and one vehicle (Mini-03) left `IN_SHOP` with an open maintenance log, so the dashboard/analytics aren't a blank slate. Re-running the seed script won't duplicate any of this or reset vehicle/driver status if it's since changed through real usage — see the comments in `backend/prisma/seed.js`.
+
+---
+
+## Fleet Operations API
+
+Vehicle Registry, Driver Management, Trip Management, and Maintenance — built to close out the spec after Auth/RBAC/Settings, Dashboard, and Fuel & Expense/Analytics (all pre-existing). Same conventions throughout: `asyncHandler`/`ApiError`/`ApiResponse`, Zod validation via `backend/src/utils/validate.js`'s `parseOrThrow`, and every route reads its role list from the shared `PERMISSIONS` matrix.
+
+### Vehicle Registry — `/api/vehicles`
+
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| GET | `/` | `vehicles` (all roles) | Filters: `type`, `status`, `region`. `?list=true` returns `{id, name, registrationNumber, status}` only — used by the Trip/Maintenance dropdowns. |
+| POST | `/` | `manageVehicles` (FLEET_MANAGER, ADMIN) | 409 on duplicate `registrationNumber`. |
+| GET | `/:id` | `vehicles` | |
+| PUT | `/:id` | `manageVehicles` | |
+| DELETE | `/:id` | `manageVehicles` | 409 if the vehicle has trip history — set status to `RETIRED` instead. |
+| GET | `/:id/operational-cost` | any authenticated user | Pre-existing; unchanged. |
+
+### Driver Management — `/api/drivers`
+
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| GET | `/` | `drivers` (all roles) | Filters: `status`, `licenseCategory`. `?list=true` for dropdowns. |
+| POST | `/` | `manageDrivers` (FLEET_MANAGER, ADMIN, SAFETY_OFFICER) | 409 on duplicate `licenseNumber`. |
+| GET / PUT / DELETE `/:id` | same pattern as vehicles | `manageDrivers` for write | DELETE is 409 if the driver has trip history. |
+
+SAFETY_OFFICER is in `manageDrivers` because the spec asks them to manage compliance fields (license, safety score) — simplified to full record-edit access rather than field-level permissions; see judgment calls below.
+
+### Trip Management — `/api/trips`
+
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| GET | `/` | `trips` (all roles) | Filters: `status`, `vehicleId`, `driverId`. |
+| POST | `/` | `manageTrips` (DISPATCHER, ADMIN) | Creates as `DRAFT`. Validates vehicle status = `AVAILABLE`, driver status = `AVAILABLE` and not `SUSPENDED`, license not expired, `cargoWeightKg <= vehicle.maxLoadCapacityKg` — each with its own error message. |
+| POST | `/:id/dispatch` | `manageTrips` | `DRAFT → DISPATCHED`. Re-validates vehicle/driver availability inside the transaction (closes the race where two drafts target the same resource), sets both to `ON_TRIP`. |
+| POST | `/:id/complete` | `manageTrips` | `DISPATCHED → COMPLETED`. Body: `endOdometerKm`, `fuelConsumedLiters`, optional `fuelCost`/`revenue`. Restores vehicle/driver to `AVAILABLE`, updates `vehicle.odometerKm`, increments `driver.tripsCompletedCount`, creates a `FuelLog` so it flows into Fuel & Expense/Analytics automatically. |
+| POST | `/:id/cancel` | `manageTrips` | Allowed from `DRAFT` or `DISPATCHED`. Only a `DISPATCHED` cancel restores vehicle/driver — a `DRAFT` never reserved them. |
+| GET | `/:id` | `trips` | |
+
+### Maintenance — `/api/maintenance-logs`
+
+| Method | Path | Permission | Notes |
+|---|---|---|---|
+| GET | `/` | `maintenance` (all roles) | Filters: `vehicleId`, `status`. |
+| POST | `/` | `manageMaintenance` (FLEET_MANAGER, ADMIN) | Requires vehicle status = `AVAILABLE` (this single check also blocks a second open log and blocks `ON_TRIP`/`RETIRED` vehicles). Sets vehicle to `IN_SHOP`. **Also creates a matching `Expense` row** (type `MAINTENANCE`) — `getOperationalCost` and the analytics cost/ROI aggregates read `Expense`, not `MaintenanceLog.cost` directly, so this was necessary for the cost to actually show up anywhere. |
+| POST | `/:id/close` | `manageMaintenance` | Restores vehicle to `AVAILABLE` — unless it was separately marked `RETIRED` while in the shop, in which case it stays `RETIRED`. |
 
 ---
 
