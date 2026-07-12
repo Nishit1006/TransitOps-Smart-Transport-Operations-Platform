@@ -4,7 +4,14 @@ import prisma from "../config/prisma.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { registerSchema, loginSchema } from "../validators/auth.validator.js";
+import { generateOtp, getOtpExpiry, OTP_VALIDITY_MINUTES } from "../utils/otp.js";
+import { sendOtpEmail } from "../utils/mailer.js";
+import {
+  registerSchema,
+  loginSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
+} from "../validators/auth.validator.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
@@ -14,7 +21,7 @@ const LOCKOUT_DURATION_MINUTES = 15;
 
 /** Strip passwordHash from user object before sending to client */
 const sanitizeUser = (user) => {
-  const { passwordHash, failedLoginAttempts, lockedUntil, ...safe } = user;
+  const { passwordHash, failedLoginAttempts, lockedUntil, otpCode, otpExpiresAt, ...safe } = user;
   return safe;
 };
 
@@ -53,14 +60,23 @@ export const register = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+  const otp = generateOtp();
 
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role },
+    data: { name, email, passwordHash, role, otpCode: otp, otpExpiresAt: getOtpExpiry() },
   });
 
-  setTokenCookie(res, user);
+  await sendOtpEmail(email, otp, OTP_VALIDITY_MINUTES);
 
-  res.status(201).json(new ApiResponse(201, sanitizeUser(user), "User registered successfully"));
+  res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        { email: user.email },
+        "Account created. Enter the OTP sent to your email to verify."
+      )
+    );
 });
 
 // ─── POST /api/auth/login ────────────────────────────────────────────────────
@@ -130,9 +146,80 @@ export const login = asyncHandler(async (req, res) => {
     });
   }
 
+  if (!user.isEmailVerified) {
+    throw new ApiError(403, "Email not verified. Please verify the OTP sent to your email.");
+  }
+
   setTokenCookie(res, user);
 
   res.json(new ApiResponse(200, sanitizeUser(user), "Login successful"));
+});
+
+// ─── POST /api/auth/verify-otp ───────────────────────────────────────────────
+export const verifyOtp = asyncHandler(async (req, res) => {
+  const parsed = verifyOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((e) => ({ field: e.path.join("."), message: e.message }));
+    throw new ApiError(400, "Validation failed", errors);
+  }
+
+  const { email, otp } = parsed.data;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new ApiError(404, "No account found with this email");
+  }
+
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email is already verified");
+  }
+
+  if (!user.otpCode || !user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    throw new ApiError(400, "OTP has expired. Please request a new one.");
+  }
+
+  if (user.otpCode !== otp) {
+    throw new ApiError(400, "Invalid OTP");
+  }
+
+  const verifiedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: { isEmailVerified: true, otpCode: null, otpExpiresAt: null },
+  });
+
+  setTokenCookie(res, verifiedUser);
+
+  res.json(new ApiResponse(200, sanitizeUser(verifiedUser), "Email verified successfully"));
+});
+
+// ─── POST /api/auth/resend-otp ───────────────────────────────────────────────
+export const resendOtp = asyncHandler(async (req, res) => {
+  const parsed = resendOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((e) => ({ field: e.path.join("."), message: e.message }));
+    throw new ApiError(400, "Validation failed", errors);
+  }
+
+  const { email } = parsed.data;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new ApiError(404, "No account found with this email");
+  }
+
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email is already verified");
+  }
+
+  const otp = generateOtp();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { otpCode: otp, otpExpiresAt: getOtpExpiry() },
+  });
+
+  await sendOtpEmail(email, otp, OTP_VALIDITY_MINUTES);
+
+  res.json(new ApiResponse(200, null, "A new OTP has been sent to your email."));
 });
 
 // ─── GET /api/auth/me ────────────────────────────────────────────────────────
