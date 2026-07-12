@@ -2,11 +2,17 @@ export const VEHICLE_TYPES = ["TRUCK", "VAN", "MINI", "TRAILER", "OTHER"] as con
 export const VEHICLE_STATUSES = ["AVAILABLE", "ON_TRIP", "IN_SHOP", "RETIRED"] as const;
 export const TRIP_STATUSES = ["DRAFT", "DISPATCHED", "COMPLETED", "CANCELLED"] as const;
 export const EXPENSE_TYPES = ["TOLL", "FUEL", "MAINTENANCE", "FINE", "OTHER"] as const;
+export const LICENSE_CATEGORIES = ["LMV", "HMV", "MOTORCYCLE", "COMMERCIAL", "OTHER"] as const;
+export const DRIVER_STATUSES = ["AVAILABLE", "ON_TRIP", "OFF_DUTY", "SUSPENDED"] as const;
+export const MAINTENANCE_STATUSES = ["IN_SHOP", "COMPLETED"] as const;
 
 export type VehicleType = (typeof VEHICLE_TYPES)[number];
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number];
 export type TripStatus = (typeof TRIP_STATUSES)[number];
 export type ExpenseType = (typeof EXPENSE_TYPES)[number];
+export type LicenseCategory = (typeof LICENSE_CATEGORIES)[number];
+export type DriverStatus = (typeof DRIVER_STATUSES)[number];
+export type MaintenanceStatus = (typeof MAINTENANCE_STATUSES)[number];
 
 export type DashboardKpis = {
   activeVehicles: number;
@@ -86,6 +92,28 @@ export type VehicleListItem = {
   name: string;
   registrationNumber: string;
   status: VehicleStatus;
+};
+
+export type Driver = {
+  id: string;
+  name: string;
+  licenseNumber: string;
+  licenseCategory: LicenseCategory;
+  licenseExpiryDate: string;
+  contactNumber: string;
+  safetyScore: string;
+  status: DriverStatus;
+  tripsCompletedCount: number;
+  tripsAssignedCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DriverListItem = {
+  id: string;
+  name: string;
+  status: DriverStatus;
+  licenseExpiryDate: string;
 };
 
 export type OrgSettings = {
