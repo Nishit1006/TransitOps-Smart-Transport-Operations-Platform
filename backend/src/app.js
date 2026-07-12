@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import prisma from "./config/prisma.js";
+import errorHandler from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -38,4 +39,6 @@ app.use((err, _req, res, _next) => {
   res.status(err.status ?? 500).json({ error: err.message ?? "Internal server error" });
 });
 
+app.use(errorHandler);
 export default app;
+
