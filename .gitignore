@@ -163,3 +163,4 @@ Thumbs.db
 
 # Postman exports (if you export collections locally, optional - remove if you WANT to track these)
 *.postman_environment.json
+.claude

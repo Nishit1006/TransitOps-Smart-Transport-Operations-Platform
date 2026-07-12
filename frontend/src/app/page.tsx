@@ -1,0 +1,24 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export default function Home() {
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>TransitOps</CardTitle>
+          <CardDescription>Smart Transport Operations Platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button>Get started</Button>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
