@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import fuelLogRoutes from "./routes/fuelLog.routes.js";
 import expenseRoutes from "./routes/expense.routes.js";
 import vehicleRoutes from "./routes/vehicle.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/fuel-logs", fuelLogRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
