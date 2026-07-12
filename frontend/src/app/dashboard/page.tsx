@@ -91,7 +91,7 @@ export default function DashboardPage() {
       {/* Filter row */}
       <div className="flex flex-wrap gap-3">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger><SelectValue placeholder="Vehicle Type" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Vehicle Type" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Types</SelectItem>
             {VEHICLE_TYPES.map((t) => (
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         </Select>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger><SelectValue placeholder="Vehicle Status" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Vehicle Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Statuses</SelectItem>
             {VEHICLE_STATUSES.map((s) => (
@@ -111,7 +111,7 @@ export default function DashboardPage() {
         </Select>
 
         <Select value={regionFilter} onValueChange={setRegionFilter}>
-          <SelectTrigger><SelectValue placeholder="Region" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Region" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Regions</SelectItem>
             {regions.map((r) => (

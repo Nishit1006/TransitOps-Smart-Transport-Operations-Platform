@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch, ApiClientError } from "@/lib/api";
+import { SessionUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,10 +17,24 @@ const ROLES = ["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALY
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [role, setRole] = useState("ADMIN");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  const sessionQuery = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: () => apiFetch<SessionUser>("/api/auth/me"),
+    retry: false,
+    meta: { skipAuthRedirect: true },
+  });
+
+  useEffect(() => {
+    if (sessionQuery.data) {
+      router.replace("/dashboard");
+    }
+  }, [sessionQuery.data, router]);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,6 +46,7 @@ export default function LoginPage() {
         method: "POST",
         body: JSON.stringify({ email, password: form.get("password") }),
       });
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       toast.success("Logged in");
       router.push("/dashboard");
     } catch (err) {
@@ -78,6 +95,7 @@ export default function LoginPage() {
         method: "POST",
         body: JSON.stringify({ email: pendingEmail, otp: form.get("otp") }),
       });
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       toast.success("Email verified");
       router.push("/dashboard");
     } catch (err) {

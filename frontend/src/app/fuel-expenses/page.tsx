@@ -172,7 +172,7 @@ function AddExpenseDialog() {
           <div className="flex flex-col gap-2">
             <Label>Type</Label>
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {EXPENSE_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>{t}</SelectItem>
