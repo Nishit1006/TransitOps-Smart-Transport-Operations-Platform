@@ -116,6 +116,44 @@ export type DriverListItem = {
   licenseExpiryDate: string;
 };
 
+export type Trip = {
+  id: string;
+  source: string;
+  destination: string;
+  vehicleId: string;
+  driverId: string;
+  cargoWeightKg: string;
+  plannedDistanceKm: string;
+  actualDistanceKm: string | null;
+  startOdometerKm: string | null;
+  endOdometerKm: string | null;
+  fuelConsumedLiters: string | null;
+  revenue: string | null;
+  etaMinutes: number | null;
+  status: TripStatus;
+  dispatchedAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  vehicle: TripVehicle;
+  driver: TripDriver;
+};
+
+export type MaintenanceLog = {
+  id: string;
+  vehicleId: string;
+  serviceType: string;
+  cost: string;
+  status: MaintenanceStatus;
+  serviceDate: string;
+  closedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  vehicle: { id: string; name: string; registrationNumber: string };
+};
+
 export type OrgSettings = {
   id: string;
   depotName: string;
