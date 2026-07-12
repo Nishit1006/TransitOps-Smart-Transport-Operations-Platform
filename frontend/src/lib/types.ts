@@ -154,6 +154,16 @@ export type MaintenanceLog = {
   vehicle: { id: string; name: string; registrationNumber: string };
 };
 
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  createdAt: string;
+};
+
 export type OrgSettings = {
   id: string;
   depotName: string;
