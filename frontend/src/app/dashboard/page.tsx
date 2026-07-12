@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -42,12 +42,13 @@ const STATUS_BADGE_VARIANT: Record<RecentTrip["status"], "default" | "secondary"
   CANCELLED: "destructive",
 };
 
-export default function DashboardPage() {
+// useSearchParams() requires a Suspense boundary to prerender at build time
+// (dev mode doesn't enforce this, which is why this was silently fine until
+// the first production build). Isolated here so it doesn't force the whole
+// page into a Suspense fallback on every load.
+function DeniedToast() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [regionFilter, setRegionFilter] = useState<string>("ALL");
 
   useEffect(() => {
     const denied = searchParams.get("denied");
@@ -57,6 +58,14 @@ export default function DashboardPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  return null;
+}
+
+export default function DashboardPage() {
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [regionFilter, setRegionFilter] = useState<string>("ALL");
 
   const kpisQuery = useQuery({
     queryKey: ["dashboard", "kpis"],
@@ -97,6 +106,9 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6">
+      <Suspense fallback={null}>
+        <DeniedToast />
+      </Suspense>
       <div>
         <h1 className="text-xl font-semibold">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Live fleet operations overview</p>
