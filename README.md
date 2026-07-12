@@ -122,6 +122,9 @@ npx prisma generate
 
 # Run migrations
 npx prisma migrate deploy
+
+# Seed demo accounts (safe to re-run — upserts, no duplicates)
+npm run seed
 ```
 
 ### 5. Start the servers
@@ -171,6 +174,29 @@ curl http://localhost:5001
 # Database connectivity
 curl http://localhost:5001/api/health/db
 ```
+
+---
+
+## Auth & Roles
+
+### Registration
+
+- `POST /api/auth/register` is **public** but always creates the account as `DISPATCHER` (lowest privilege). The `role` field is not part of the request schema — if a client sends one anyway, it's silently ignored by Zod's default "strip unknown keys" behavior, not honored.
+- Elevated roles (`FLEET_MANAGER`, `SAFETY_OFFICER`, `FINANCIAL_ANALYST`, `ADMIN`) can only be granted via `POST /api/admin/users`, which requires an authenticated `ADMIN` session (`authenticate` + `authorize("ADMIN")`). Admin-created accounts are marked `isEmailVerified: true` immediately (the admin creating them is the verification step); self-serve registrations still go through the OTP email flow.
+- **Why this shape and not a full "admin create user" screen:** the fix prioritized closing the privilege-escalation hole and standing up the API contract correctly. There's no admin UI for user creation yet — use `POST /api/admin/users` directly (curl/Postman) until that screen is built.
+- ⚠️ **Contract change:** `POST /api/auth/register` no longer accepts/uses `role` in the request body. Anything that was relying on setting a role at registration needs to switch to `POST /api/admin/users`.
+
+### Demo accounts
+
+Seeded via `npm run seed` (backend), idempotent — safe to re-run. All accounts share the same password:
+
+| Role | Email | Password |
+|---|---|---|
+| ADMIN | `admin@transitops.com` | `Password123!` |
+| FLEET_MANAGER | `fleet.manager@transitops.com` | `Password123!` |
+| DISPATCHER | `dispatcher@transitops.com` | `Password123!` |
+| SAFETY_OFFICER | `safety.officer@transitops.com` | `Password123!` |
+| FINANCIAL_ANALYST | `financial.analyst@transitops.com` | `Password123!` |
 
 ---
 

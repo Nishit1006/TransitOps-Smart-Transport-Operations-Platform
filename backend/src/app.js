@@ -10,6 +10,7 @@ import vehicleRoutes from "./routes/vehicle.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import reportRoutes from "./routes/report.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

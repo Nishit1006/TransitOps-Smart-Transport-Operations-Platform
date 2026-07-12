@@ -19,6 +19,11 @@ const BCRYPT_SALT_ROUNDS = 10;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 15;
 
+// Self-serve registration always gets this role. Never trust a role value
+// supplied by the client — elevated roles are only granted via
+// POST /api/admin/users, which requires an authenticated ADMIN.
+const SELF_SERVE_ROLE = "DISPATCHER";
+
 /** Strip passwordHash from user object before sending to client */
 const sanitizeUser = (user) => {
   const { passwordHash, failedLoginAttempts, lockedUntil, otpCode, otpExpiresAt, ...safe } = user;
@@ -52,7 +57,7 @@ export const register = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Validation failed", errors);
   }
 
-  const { name, email, password, role } = parsed.data;
+  const { name, email, password } = parsed.data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -63,7 +68,14 @@ export const register = asyncHandler(async (req, res) => {
   const otp = generateOtp();
 
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role, otpCode: otp, otpExpiresAt: getOtpExpiry() },
+    data: {
+      name,
+      email,
+      passwordHash,
+      role: SELF_SERVE_ROLE,
+      otpCode: otp,
+      otpExpiresAt: getOtpExpiry(),
+    },
   });
 
   await sendOtpEmail(email, otp, OTP_VALIDITY_MINUTES);

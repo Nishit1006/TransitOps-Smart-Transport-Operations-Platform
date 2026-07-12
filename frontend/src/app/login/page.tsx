@@ -10,17 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const ROLES = ["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST", "ADMIN"];
 
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [role, setRole] = useState("ADMIN");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const sessionQuery = useQuery({
@@ -73,7 +69,6 @@ export default function LoginPage() {
           name: form.get("name"),
           email,
           password: form.get("password"),
-          role,
         }),
       });
       toast.success("Account created. Check your email for the OTP.");
@@ -208,17 +203,10 @@ export default function LoginPage() {
                   <Label htmlFor="reg-password">Password</Label>
                   <Input id="reg-password" name="password" type="password" required minLength={8} />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Role</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  New accounts are created with basic Dispatcher access. Contact an admin to
+                  request a different role.
+                </p>
                 <Button type="submit" disabled={isSubmitting} className="mt-2">
                   {isSubmitting ? "Creating…" : "Create Account"}
                 </Button>
